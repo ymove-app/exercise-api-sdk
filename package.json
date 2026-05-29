@@ -1,0 +1,52 @@
+{
+  "name": "ymove-exercise-api",
+  "version": "1.0.0",
+  "description": "Official SDK for the YMove Exercise Video API - 680+ HD exercise videos, workout generation, program builder, and AI posture analysis.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "exercise",
+    "exercise-api",
+    "exercise-database",
+    "exercisedb",
+    "exercisedb-alternative",
+    "fitness",
+    "fitness-api",
+    "workout",
+    "workout-api",
+    "workout-generator",
+    "exercise-videos",
+    "gym",
+    "training",
+    "posture",
+    "yoga",
+    "ymove"
+  ],
+  "author": "YMove <contact@ymove.app>",
+  "license": "MIT",
+  "homepage": "https://ymove.app/exercise-api",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ymove-app/exercise-api-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/ymove-app/exercise-api-sdk/issues"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
