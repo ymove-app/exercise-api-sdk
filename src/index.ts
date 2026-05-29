@@ -2,7 +2,7 @@
  * YMove Exercise Video API SDK
  *
  * 680+ HD exercise videos, workout generation, program builder, and AI posture analysis.
- * Get your API key at https://ymove.app/exercise-api/signup (free trial, no credit card).
+ * Get your API key at https://ymove.app/exercise-api (free trial).
  *
  * @example
  * ```typescript
@@ -21,7 +21,9 @@
  * ```
  */
 
-const DEFAULT_BASE_URL = 'https://exercise-api.ymove.app/api/v2';
+import { Transport, HttpTransport, YMoveError, DEFAULT_BASE_URL } from './transport';
+
+export { Transport, HttpTransport, YMoveError, DEFAULT_BASE_URL };
 
 // ── Types ──────────────────────────────────────────────
 
@@ -329,9 +331,18 @@ interface SingleResponse<T> {
 
 // ── Client ─────────────────────────────────────────────
 
+export interface YMoveClientOptions {
+  baseUrl?: string;
+  /**
+   * Transport to use for requests. Defaults to `HttpTransport`.
+   * Pass an `McpTransport` (from `ymove-exercise-api/mcp`) to route calls through
+   * the local `ymove-exercise-mcp` server instead of direct HTTPS.
+   */
+  transport?: Transport;
+}
+
 export class YMoveClient {
-  private apiKey: string;
-  private baseUrl: string;
+  private transport: Transport;
 
   public exercises: ExerciseResource;
   public workouts: WorkoutResource;
@@ -344,11 +355,10 @@ export class YMoveClient {
    * Create a new YMove API client.
    *
    * @param apiKey - Your API key. Get one at https://ymove.app/exercise-api/signup
-   * @param options - Optional configuration
+   * @param options - Optional configuration. `transport` overrides the default HTTP transport.
    */
-  constructor(apiKey: string, options?: { baseUrl?: string }) {
-    this.apiKey = apiKey;
-    this.baseUrl = options?.baseUrl || DEFAULT_BASE_URL;
+  constructor(apiKey: string, options?: YMoveClientOptions) {
+    this.transport = options?.transport ?? new HttpTransport(apiKey, options?.baseUrl);
     this.exercises = new ExerciseResource(this);
     this.workouts = new WorkoutResource(this);
     this.programs = new ProgramResource(this);
@@ -358,27 +368,17 @@ export class YMoveClient {
   }
 
   /** @internal */
-  async request<T>(path: string, options?: RequestInit): Promise<T> {
-    const url = `${this.baseUrl}${path}`;
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        'X-API-Key': this.apiKey,
-        ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
-        ...options?.headers,
-      },
-    });
+  request<T>(path: string, options?: RequestInit): Promise<T> {
+    return this.transport.request<T>(path, options);
+  }
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new YMoveError(
-        body.error || body.message || `API error ${res.status}`,
-        res.status,
-        body
-      );
-    }
-
-    return res.json();
+  /**
+   * Release any resources the transport holds (e.g. shut down the MCP
+   * subprocess when using `McpTransport`). Safe to call on the default
+   * HTTP transport (no-op).
+   */
+  async close(): Promise<void> {
+    if (this.transport.close) await this.transport.close();
   }
 
   /**
@@ -532,20 +532,6 @@ class RecipeResource {
   async diets(): Promise<DietCount[]> {
     const res = await this.client.request<SingleResponse<DietCount[]>>('/recipes/diets');
     return res.data;
-  }
-}
-
-// ── Error ──────────────────────────────────────────────
-
-export class YMoveError extends Error {
-  status: number;
-  body: any;
-
-  constructor(message: string, status: number, body: any) {
-    super(message);
-    this.name = 'YMoveError';
-    this.status = status;
-    this.body = body;
   }
 }
 

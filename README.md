@@ -14,7 +14,7 @@ npm install ymove-exercise-api
 import { YMoveClient } from 'ymove-exercise-api';
 
 const ymove = new YMoveClient('your_api_key');
-// Get your API key at https://ymove.app/exercise-api/signup (free trial)
+// Get your API key in the docs at https://ymove.app/exercise-api (free trial)
 
 // List chest exercises with video
 const { data: exercises } = await ymove.exercises.list({
@@ -63,8 +63,8 @@ const { data, pagination } = await ymove.exercises.list({
 ### Get single exercise
 
 ```typescript
-const exercise = await ymove.exercises.get('barbell-squat');
-console.log(exercise.title);           // "Barbell Squat"
+const exercise = await ymove.exercises.get('barbell-back-squat');
+console.log(exercise.title);           // "Barbell Back Squat"
 console.log(exercise.videoUrl);        // MP4 URL
 console.log(exercise.videoHlsUrl);     // HLS streaming URL
 console.log(exercise.thumbnailUrl);    // Thumbnail image
@@ -154,7 +154,46 @@ try {
 
 ## API Key
 
-Get your free trial API key at [ymove.app/exercise-api/signup](https://ymove.app/exercise-api/signup) - no credit card required.
+Get your free trial API key from the docs at [ymove.app/exercise-api](https://ymove.app/exercise-api).
+
+## Transports
+
+By default the SDK talks to the HTTPS API. You can also route the same calls through the [`ymove-exercise-mcp`](../mcp-server) MCP server - useful for testing that both surfaces stay in sync, or for running the SDK inside a Node test harness with the MCP transport.
+
+```typescript
+// Default - direct HTTPS
+const client = new YMoveClient(apiKey);
+
+// Route through the local MCP server (Node only)
+import { McpTransport } from 'ymove-exercise-api/mcp';
+
+const transport = new McpTransport(apiKey);  // spawns `npx ymove-exercise-mcp`
+const client = new YMoveClient(apiKey, { transport });
+
+// Same SDK surface either way:
+const { data } = await client.exercises.list({ muscleGroup: 'chest' });
+
+await client.close();  // shuts down the MCP subprocess
+```
+
+### MCP transport limitations
+
+The MCP server exposes a subset of the API. These SDK methods are **not** available via `McpTransport` - use `HttpTransport` (the default) for these:
+
+- `getUsage`
+- `posture.analyze`
+- `foods.logPhoto`
+- `recipes.mealTypes`, `recipes.diets`
+
+Calling them on an `McpTransport` client throws a `YMoveError` with status 501.
+
+### Verifying parity
+
+```bash
+YMOVE_API_KEY=your_key npm run test:transports
+```
+
+Runs the same SDK calls through both transports and prints a side-by-side comparison.
 
 ## Links
 
