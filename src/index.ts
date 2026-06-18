@@ -33,6 +33,11 @@ export interface Video {
   videoHlsUrl: string | null;
   thumbnailUrl: string | null;
   tag: 'white-background' | 'gym-shot';
+  /**
+   * Video aspect orientation. Most exercise clips are PORTRAIT (vertical, ~9:16),
+   * shot for mobile. Do not assume landscape: read this field and size the player
+   * to match (for portrait, `aspect-ratio: 9/16` with `object-fit: cover`).
+   */
   orientation: 'landscape' | 'portrait';
   isPrimary: boolean;
 }
