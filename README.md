@@ -1,6 +1,6 @@
 # ymove-exercise-api
 
-Official SDK for the [YMove Exercise Video API](https://ymove.app/exercise-api) - 680+ HD exercise videos, workout generation, program builder, and AI posture analysis.
+Official SDK for the [YMove Exercise Video API](https://ymove.app/exercise-api) - 1107+ HD exercise videos, workout generation, program builder, and AI posture analysis.
 
 ## Installation
 
