@@ -27,12 +27,43 @@ export { Transport, HttpTransport, YMoveError, DEFAULT_BASE_URL };
 
 // ── Types ──────────────────────────────────────────────
 
+/**
+ * Five framings of one frame from the clip.
+ *
+ * The frame is picked from across the clip for a visible face and the most
+ * extended pose, so a jump is caught mid-air rather than at the rest position
+ * the clip opens on. Each crop is centred on the person by face detection and
+ * white-balanced after cropping, so clips from different shoots match in a grid.
+ *
+ * Sizes are ceilings: images are never upscaled, so a crop is only as large as
+ * the source clip allows. Unlike the video URLs these are static: no token, no
+ * expiry, safe to cache and store, and they never count against your cap.
+ *
+ * They accompany the video whenever one is returned. On Scale they are also
+ * returned without a video (browse mode, `excludeVideos`); on the capped plans
+ * they are not, so the monthly exercise limit stays visible while you build.
+ */
+export interface Thumbnails {
+  /** Up to 600x800 (3:4). The default, and what `thumbnailUrl` points at. */
+  default: string;
+  /** Up to 600x600 (1:1). List rows and grid tiles. */
+  square: string;
+  /** Up to 720x1280 (9:16). Matches the video, for full-bleed mobile. */
+  portrait: string;
+  /** Up to 1280x720 (16:9). Wide cards and player poster frames; tall poses crop to the upper body. */
+  landscape: string;
+  /** The whole frame, uncropped, as shot (~9:16). */
+  original: string;
+}
+
 export interface Video {
   /** Stable unique ID of this video. Does not change when the signed URLs do. */
   id: string;
   videoUrl: string | null;
   videoHlsUrl: string | null;
+  /** Same as `thumbnails.default` (600x800, 3:4). */
   thumbnailUrl: string | null;
+  thumbnails: Thumbnails | null;
   tag: 'white-background' | 'gym-shot';
   /**
    * Video aspect orientation. Most exercise clips are PORTRAIT (vertical, ~9:16),
@@ -58,7 +89,9 @@ export interface Exercise {
   exerciseType: string[] | null;
   videoUrl: string | null;
   videoHlsUrl: string | null;
+  /** Same as `thumbnails.default` (600x800, 3:4). Present without video URLs on Scale only. */
   thumbnailUrl: string | null;
+  thumbnails: Thumbnails | null;
   videoDurationSecs: number | null;
   hasVideo: boolean;
   hasVideoWhite: boolean;
@@ -266,6 +299,23 @@ export interface ListExercisesParams {
   search?: string;
   page?: number;
   pageSize?: number;
+  /**
+   * Include playable video URLs. Each returned exercise then counts toward your
+   * monthly cap. Omitted, this follows your key's default. Thumbnails come with
+   * the video; on Scale they are returned in browse mode too.
+   */
+  includeVideos?: boolean;
+  /** The same switch from the other side; wins over includeVideos. */
+  excludeVideos?: boolean;
+}
+
+export interface GetExerciseParams {
+  /**
+   * Return metadata without the video URLs, in which case the exercise does not
+   * count toward your monthly cap. Thumbnails come with it on Scale; on the
+   * capped plans they go with the video. Videos are included by default here.
+   */
+  excludeVideos?: boolean;
 }
 
 export interface GenerateWorkoutParams {
@@ -409,8 +459,11 @@ class ExerciseResource {
   /**
    * Get a single exercise by ID (UUID) or slug.
    */
-  async get(idOrSlug: string): Promise<Exercise> {
-    const res = await this.client.request<SingleResponse<Exercise>>(`/exercises/${encodeURIComponent(idOrSlug)}`);
+  async get(idOrSlug: string, params?: GetExerciseParams): Promise<Exercise> {
+    const query = toQuery(params);
+    const res = await this.client.request<SingleResponse<Exercise>>(
+      `/exercises/${encodeURIComponent(idOrSlug)}${query}`
+    );
     return res.data;
   }
 
