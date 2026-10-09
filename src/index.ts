@@ -1,7 +1,7 @@
 /**
  * YMove Exercise Video API SDK
  *
- * 680+ HD exercise videos, workout generation, program builder, and AI posture analysis.
+ * 1,413+ HD exercise videos, workout generation, program builder, and AI posture analysis.
  * Get your API key at https://ymove.app/exercise-api (free trial).
  *
  * @example
@@ -28,7 +28,8 @@ export { Transport, HttpTransport, YMoveError, DEFAULT_BASE_URL };
 // ── Types ──────────────────────────────────────────────
 
 export interface Video {
-  bunnyVideoId: string;
+  /** Stable unique ID of this video. Does not change when the signed URLs do. */
+  id: string;
   videoUrl: string | null;
   videoHlsUrl: string | null;
   thumbnailUrl: string | null;
@@ -58,7 +59,6 @@ export interface Exercise {
   videoUrl: string | null;
   videoHlsUrl: string | null;
   thumbnailUrl: string | null;
-  bunnyVideoId: string | null;
   videoDurationSecs: number | null;
   hasVideo: boolean;
   hasVideoWhite: boolean;
