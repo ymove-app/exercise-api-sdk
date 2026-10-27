@@ -1,7 +1,7 @@
 /**
  * YMove Exercise Video API SDK
  *
- * 2,000+ HD exercise videos, workout generation, program builder, and AI posture analysis.
+ * 2,005+ HD exercise videos, workout generation, program builder, and AI posture analysis.
  * Get your API key at https://ymove.app/exercise-api (free trial).
  *
  * @example
